@@ -15,6 +15,15 @@ Mat left_prev;
 Mat right_prev;
 pair<int,int> obstacles_detected;
 
+FlowVector::FlowVector():
+	_obstacle_location{}
+	{
+		_count=1;
+	}
+
+String identify_location(){
+
+}
 
 MatrixXd pinv(MatrixXd& m, double epsilon = 1E-9)
 {
@@ -37,10 +46,10 @@ MatrixXd pinv(MatrixXd& m, double epsilon = 1E-9)
 }
 
 std::pair<int,int> FlowVector::detected_obstacle(){
-
-	int count=1;
-	obstacles_detected.first=0;
-	obstacles_detected.second=0;
+	_obstacle_location.clear();
+	//int _count=1;
+	//obstacles_detected.first=0;
+	//obstacles_detected.second=0;
 	VideoCapture cap(0);
 	// Check if camera opened successfully
 	if(!cap.isOpened())
@@ -56,18 +65,21 @@ std::pair<int,int> FlowVector::detected_obstacle(){
 			Rect right_ROI(grey.cols/2,0,grey.cols/2, grey.rows);
 			left=grey(left_ROI);
 			right=grey(right_ROI);
-			if(count > 1)
+			_locMtx.lock();
+					{
+			if(_count > 1)
 				{
 				obstacles_detected.first = optic_vector(left_prev,left);
 				obstacles_detected.second = optic_vector(right_prev,right);
-				cout<<"left:" + obstacles_detected.first<<endl;
-				cout<<"right:" + obstacles_detected.second<<endl;
 				}
+			_obstacle_location.push_back(obstacles_detected);
+			_locMtx.unlock();
+			}
 			left_prev=left;
 			right_prev=right;
-			count++;
-			//cout<<"left:" + obstacles_detected.first<<endl;
-			//cout<<"right:" + obstacles_detected.second<<endl;
+			_count++;
+			//cout<<obstacles_detected.first<<endl;
+			//cout<<obstacles_detected.second<<endl;
 			putText(left, to_string(obstacles_detected.first), cvPoint(left.cols/2, left.rows/2),
 			        FONT_HERSHEY_SIMPLEX, 0.8, cvScalar(255, 255, 0), 1, CV_AA);
 			putText(right, to_string(obstacles_detected.second), cvPoint(right.cols/2, right.rows/2),
@@ -87,15 +99,15 @@ int optic_vector(Mat first_image_in,Mat second_image_in)
 {
   Mat first_image;
   Mat second_image;
-  float vec_threshold=50;
+  float vec_threshold=25;
   int n=11;
   GaussianBlur(first_image_in,first_image,Size(n,n),0,0);
   GaussianBlur(second_image_in,second_image,Size(n,n),0,0);
   int obstacles=0;
   Mat optic_image;
   cvtColor(first_image,optic_image, CV_GRAY2RGB);
-  int line_thickness=1;
-  cv::Scalar line_color=CV_RGB(64, 64, 255);
+  //int line_thickness=1;
+  //cv::Scalar line_color=CV_RGB(64, 64, 255);
   int maxCorners=100;
   std::vector<cv::Point2f> corners;
   corners.reserve(maxCorners);
@@ -129,6 +141,7 @@ int optic_vector(Mat first_image_in,Mat second_image_in)
 
       if(force>vec_threshold)
       {
+    	  /*
     	  CvPoint p,q;
     	        p.y=i;
     	        p.x=j;
@@ -146,8 +159,8 @@ int optic_vector(Mat first_image_in,Mat second_image_in)
     	        p.x = (int) (q.x + 9 * cos(angle - PI / 4));
     	        p.y = (int) (q.y + 9 * sin(angle - PI / 4));
     	        line( optic_image, p, q, line_color, line_thickness, CV_AA, 0 );
+    	        */
     	        obstacles++;
-
     	  }
   }
 return obstacles;

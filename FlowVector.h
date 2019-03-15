@@ -22,6 +22,7 @@
 #include <opencv2/video/tracking.hpp>
 #include <math.h>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <mutex>
 
 #define PI 3.14
 
@@ -37,9 +38,14 @@ MatrixXd pinv(MatrixXd& m, double );
 
 class FlowVector {
 public:
+	FlowVector();
 	pair<int,int> detected_obstacle();
 	float Square(float x);
-	vector<pair<int,int>> obstacle_list;
+	String identify_location();
+private:
+	vector<pair<int,int>> _obstacle_location;
+	mutex _locMtx;
+	int _count;
 
 
 };
