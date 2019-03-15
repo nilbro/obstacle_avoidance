@@ -14,15 +14,29 @@ using namespace Eigen;
 Mat left_prev;
 Mat right_prev;
 pair<int,int> obstacles_detected;
+vector<pair<int,int>> _obstacle_location;
+int _count =1;
 
-FlowVector::FlowVector():
-	_obstacle_location{}
-	{
-		_count=1;
+
+String FlowVector::identify_location(){
+	String location="";
+	std::vector < pair<int,int> > ::reverse_iterator revIt;
+	for (revIt = _obstacle_location.rbegin(); revIt != _obstacle_location.rend(); revIt++){
+		if(revIt->first>1 && revIt->second > 1){
+			location = "Obstacles on both sides";
+		}
+		else{
+		 if(revIt->first > 1){
+				location="Obstacle on left";
+			}
+		else if(revIt->second > 1){
+				location="Obstacle on right";
+			}
+		}
+
 	}
 
-String identify_location(){
-
+	return location;
 }
 
 MatrixXd pinv(MatrixXd& m, double epsilon = 1E-9)
@@ -45,7 +59,7 @@ MatrixXd pinv(MatrixXd& m, double epsilon = 1E-9)
       svd.matrixU().transpose());
 }
 
-std::pair<int,int> FlowVector::detected_obstacle(){
+void FlowVector::detected_obstacle(){
 	_obstacle_location.clear();
 	//int _count=1;
 	//obstacles_detected.first=0;
@@ -66,7 +80,6 @@ std::pair<int,int> FlowVector::detected_obstacle(){
 			left=grey(left_ROI);
 			right=grey(right_ROI);
 			_locMtx.lock();
-					{
 			if(_count > 1)
 				{
 				obstacles_detected.first = optic_vector(left_prev,left);
@@ -74,12 +87,13 @@ std::pair<int,int> FlowVector::detected_obstacle(){
 				}
 			_obstacle_location.push_back(obstacles_detected);
 			_locMtx.unlock();
-			}
 			left_prev=left;
 			right_prev=right;
 			_count++;
 			//cout<<obstacles_detected.first<<endl;
 			//cout<<obstacles_detected.second<<endl;
+			//String leftText = "Obstacle on the left";
+			//String rightText = "Obstacle on the right";
 			putText(left, to_string(obstacles_detected.first), cvPoint(left.cols/2, left.rows/2),
 			        FONT_HERSHEY_SIMPLEX, 0.8, cvScalar(255, 255, 0), 1, CV_AA);
 			putText(right, to_string(obstacles_detected.second), cvPoint(right.cols/2, right.rows/2),
@@ -92,14 +106,14 @@ std::pair<int,int> FlowVector::detected_obstacle(){
 		    if (c == 27)
 		    	break;
 	}
-	return obstacles_detected;
+	//return obstacles_detected;
 }
 
 int optic_vector(Mat first_image_in,Mat second_image_in)
 {
   Mat first_image;
   Mat second_image;
-  float vec_threshold=25;
+  float vec_threshold=50;
   int n=11;
   GaussianBlur(first_image_in,first_image,Size(n,n),0,0);
   GaussianBlur(second_image_in,second_image,Size(n,n),0,0);

@@ -32,20 +32,20 @@ using namespace cv;
 using namespace Eigen;
 
 
-
 int optic_vector(Mat first_image_in,Mat second_image_in);
 MatrixXd pinv(MatrixXd& m, double );
 
+
 class FlowVector {
 public:
-	FlowVector();
-	pair<int,int> detected_obstacle();
+	void detected_obstacle();
 	float Square(float x);
 	String identify_location();
+
 private:
-	vector<pair<int,int>> _obstacle_location;
+	//vector<pair<int,int>> _obstacle_location;
 	mutex _locMtx;
-	int _count;
+
 
 
 };
